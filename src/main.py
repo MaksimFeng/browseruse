@@ -1,6 +1,3 @@
-# """browser_agent.py
-# OpenAI‑ or Ollama‑powered Playwright agent with **budget guard**.
-
 # Key points
 # ──────────
 # * Keeps the Playwright browser **open for the entire agent run** (fixes
@@ -54,13 +51,10 @@ _PRICES = {
     "gpt-4o": 0.005,
 }
 
-# Disable LangSmith spam unless the user really wants tracing
+# Disable LangSmith spam unless really wants tracing
 filterwarnings("ignore", category=UserWarning, module="langsmith")
 os.environ.setdefault("LANGCHAIN_TRACING_V2", "false")
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Helpers
-# ──────────────────────────────────────────────────────────────────────────────
 @dataclass
 class RunResult:
     answer: str
@@ -87,9 +81,6 @@ def _price(model: str, prompt_t: int, compl_t: int) -> float:
     return rate * (prompt_t + compl_t) / 1000
 
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Core logic (single Playwright context)
-# ──────────────────────────────────────────────────────────────────────────────
 async def run_task(url: str, user_task: str, model: str = DEFAULT_MODEL, max_tokens: int = MAX_TOKENS) -> RunResult:
     spent_so_far = _load_spend()
     if spent_so_far >= BUDGET_LIMIT_USD:
@@ -121,7 +112,7 @@ async def run_task(url: str, user_task: str, model: str = DEFAULT_MODEL, max_tok
             # Explicit quota error triggers fallback
             if "insufficient_quota" in str(e):
                 print("[Info] OpenAI quota exhausted – switching to local Ollama model.")
-                # Build Ollama executor (if daemon ready)
+                # Build Ollama executor 
                 try:
                     local_llm = ChatOllama(model="llama3")
                     _ = local_llm.invoke("ping")  # health‑check
@@ -145,9 +136,6 @@ async def run_task(url: str, user_task: str, model: str = DEFAULT_MODEL, max_tok
         return RunResult(result["output"], p_t, c_t, cost)
 
 
-# ──────────────────────────────────────────────────────────────────────────────
-# CLI wrapper
-# ──────────────────────────────────────────────────────────────────────────────
 async def _cli_entry(argv: List[str] | None = None):
     global BUDGET_LIMIT_USD
 
